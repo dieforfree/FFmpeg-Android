@@ -12,11 +12,12 @@ fi
 
 git reset --hard
 git clean -f -d
-git checkout `cat ../ffmpeg-version`
-patch -p1 <../FFmpeg-VPlayer.patch
+git checkout release/2.0
+#git checkout `cat ../ffmpeg-version`
+#patch -p1 <../FFmpeg-VPlayer.patch
 [ $PIPESTATUS == 0 ] || exit 1
 
-git log --pretty=format:%H -1 > ../ffmpeg-version
+#git log --pretty=format:%H -1 > ../ffmpeg-version
 
 TOOLCHAIN=/tmp/vplayer
 SYSROOT=$TOOLCHAIN/sysroot/
@@ -68,7 +69,8 @@ FFMPEG_FLAGS="--target-os=linux \
   --enable-version3"
 
 
-for version in neon armv7 vfp armv6; do
+#for version in neon armv7 vfp armv6; do
+for version in armv6; do
 
   cd $SOURCE
 
@@ -106,8 +108,10 @@ for version in neon armv7 vfp armv6; do
   make -j4 || exit 1
   make install || exit 1
 
-  rm libavcodec/inverse.o
-  $CC -lm -lz -shared --sysroot=$SYSROOT -Wl,--no-undefined -Wl,-z,noexecstack $EXTRA_LDFLAGS libavutil/*.o libavutil/arm/*.o libavcodec/*.o libavcodec/arm/*.o libavformat/*.o libswresample/*.o libswscale/*.o -o $PREFIX/libffmpeg.so
+#  rm libavcodec/inverse.o
+  $CC -llog --sysroot=$SYSROOT -Wall -c flk_ffmpeg_filter.c flk_ffmpeg_opts.c flk_cmdutils.c flk_ffmpeg.c flk_converter.c
+
+  $CC -lm -lz -shared --sysroot=$SYSROOT -Wl,--no-undefined -Wl,-z,noexecstack $EXTRA_LDFLAGS libavutil/*.o libavutil/arm/*.o libavcodec/*.o libavcodec/arm/*.o libavformat/*.o libswresample/*.o libswscale/*.o ./*.o -o $PREFIX/libffmpeg.so
 
   cp $PREFIX/libffmpeg.so $PREFIX/libffmpeg-debug.so
   arm-linux-androideabi-strip --strip-unneeded $PREFIX/libffmpeg.so
